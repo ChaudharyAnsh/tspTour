@@ -8,3 +8,5 @@ The node values should be in a large value range for MST lower_bound to accurate
 ## Genetic Algorithm 
 For large values, it is infeasable to run genetic algorithm, (~2 minutes for 20 nodes). 
 However, in this range (upto 20 nodes), performs much better than deterministic ones within 20-25% of the MST lower_bound.   
+
+![image](https://github.com/ChaudharyAnsh/tspTour/assets/95434969/7ee3b0d1-f484-46d9-901e-218b6a3cc279)
