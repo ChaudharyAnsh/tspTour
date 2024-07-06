@@ -26,8 +26,6 @@ class Graph:
             self.baseline += init * edge[2]
             dsu.union(edge[0], edge[1])
             mstEdges.append((edge[0], edge[1]))
-
-        self.baseline += init * self.edges[0][2]
         return mstEdges
 
     def calculateBaseLine(self):

@@ -1,88 +1,86 @@
 import math
 import random
 
-def generate_random_paths(total_destinations):
-    random_paths = []
+def generateRandomPaths(n):
+    randomPaths = []
     for _ in range(20000):
-        random_path = list(range(1, total_destinations))
-        random.shuffle(random_path)
-        random_path = [0] + random_path
-        random_paths.append(random_path)
-    return random_paths
+        randomPath = list(range(n))
+        random.shuffle(randomPath)
+        randomPaths.append(randomPath)
+    return randomPaths
 
+def totalDistance(nodes, path):
+    return sum(math.dist(nodes[path[i - 1]], nodes[path[i]]) for i in range(len(path)))
 
-def total_distance(points, path):
-    return sum(
-        math.dist(points[path[i - 1]], points[path[i]]) for i in range(len(path))
-    )
-
-
-def choose_survivors(points, old_generation):
+def chooseSurvivors(nodes, oldGen):
     survivors = []
-    random.shuffle(old_generation)
-    midway = len(old_generation) // 2
+    random.shuffle(oldGen)
+    midway = len(oldGen) // 2
     for i in range(midway):
-        if total_distance(points, old_generation[i]) < total_distance(
-            points, old_generation[i + midway]
-        ):
-            survivors.append(old_generation[i])
+        if totalDistance(nodes, oldGen[i]) < totalDistance(nodes, oldGen[i + midway]):
+            survivors.append(oldGen[i])
         else:
-            survivors.append(old_generation[i + midway])
+            survivors.append(oldGen[i + midway])
     return survivors
 
 
-def create_offspring(parent_a, parent_b):
+def createOffspring(parentA, parentB):
     offspring = []
-    start = random.randint(0, len(parent_a) - 1)
-    finish = random.randint(start, len(parent_a))
-    sub_path_from_a = parent_a[start:finish]
-    remaining_path_from_b = list(
-        [item for item in parent_b if item not in sub_path_from_a]
-    )
-    for i in range(0, len(parent_a)):
+    start = random.randint(0, len(parentA) - 1)
+    finish = random.randint(start, len(parentA))
+
+    presentInA = [0 for i in range(len(parentA))]
+    subPathA = parentA[start:finish]
+    for item in subPathA:
+        presentInA[item] += 1
+    subPathB = list([item for item in parentB if not presentInA[item]])
+
+    ida, idb = 0, 0
+    for i in range(0, len(parentA)):
         if start <= i < finish:
-            offspring.append(sub_path_from_a.pop(0))
+            offspring.append(subPathA[ida])
+            ida += 1
         else:
-            offspring.append(remaining_path_from_b.pop(0))
+            offspring.append(subPathB[idb])
+            idb += 1
     return offspring
 
 
-def apply_crossovers(survivors):
+def applyCrossovers(survivors):
     offsprings = []
     midway = len(survivors) // 2
     for i in range(midway):
-        parent_a, parent_b = survivors[i], survivors[i + midway]
+        parentA, parentB = survivors[i], survivors[i + midway]
         for _ in range(2):
-            offsprings.append(create_offspring(parent_a, parent_b))
-            offsprings.append(create_offspring(parent_b, parent_a))
+            offsprings.append(createOffspring(parentA, parentB))
+            offsprings.append(createOffspring(parentB, parentA))
     return offsprings
 
 
-def apply_mutations(generation):
-    gen_wt_mutations = []
+def applyMutations(generation):
+    mutated = []
     for path in generation:
         if random.randint(0, 1000) < 9:
-            index1, index2 = random.randint(1, len(path) - 1), random.randint(
-                1, len(path) - 1
-            )
+            index1 = random.randint(0, len(path)-1)
+            index2 = random.randint(0, len(path)-1)
             path[index1], path[index2] = path[index2], path[index1]
-        gen_wt_mutations.append(path)
-    return gen_wt_mutations
+        mutated.append(path)
+    return mutated
 
 
-def generate_new_population(points, old_generation):
-    survivors = choose_survivors(points, old_generation)
-    crossovers = apply_crossovers(survivors)
-    new_population = apply_mutations(crossovers)
-    return new_population
+def generateNewPopulation(nodes, oldGen):
+    survivors = chooseSurvivors(nodes, oldGen)
+    crossovers = applyCrossovers(survivors)
+    newPopulation = applyMutations(crossovers)
+    return newPopulation
 
 
-def choose_best(points, paths, count):
-    return sorted(paths, key=lambda path: total_distance(points, path))[:count]
+def choose_best(nodes, paths, count):
+    return sorted(paths, key=lambda path: totalDistance(nodes, path))[:count]
 
 
-def choose_worst(points, paths, count):
-    return sorted(paths, reverse=True, key=lambda path: total_distance(points, path))[
+def choose_worst(nodes, paths, count):
+    return sorted(paths, reverse=True, key=lambda path: totalDistance(nodes, path))[
         :count
     ]
 
@@ -91,8 +89,10 @@ def choose_random(paths, count):
     return [random.choice(paths) for _ in range(count)]
 
 
-# def genetic(g):
-#     random_path = generate_random_paths(g.n)
-#     for _ in range(1000):
-        
-    
+def genetic(nodes):
+    oldGen = generateRandomPaths(len(nodes))
+    for _ in range(500):
+        newGen = generateNewPopulation(nodes, oldGen)
+        oldGen = newGen
+    winner = choose_best(nodes, oldGen, 1)[0]
+    return (totalDistance(nodes, winner), winner)
